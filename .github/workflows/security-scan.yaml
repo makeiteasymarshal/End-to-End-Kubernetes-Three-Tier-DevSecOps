@@ -1,0 +1,85 @@
+name: DevSecOps Security Scan
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  trivy-fs-scan:
+    name: Trivy Filesystem & IaC Misconfiguration Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem & config scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "vuln,secret,misconfig"
+          severity: "CRITICAL,HIGH"
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+
+      - name: Upload Trivy FS SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-fs-results.sarif"
+
+  sonarqube-scan:
+    name: SonarQube Static Code Analysis
+    runs-on: ubuntu-latest
+    if: ${{ vars.SONAR_HOST_URL != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=three-tier-devsecops
+            -Dsonar.sources=application
+            -Dsonar.tests=tests
+
+  container-image-scan:
+    name: Build & Trivy Container Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build backend image locally for scan
+        run: docker build -f docker/backend.Dockerfile -t three-tier-backend:scan .
+
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "three-tier-backend:scan"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Build frontend image locally for scan
+        run: docker build -f docker/frontend.Dockerfile -t three-tier-frontend:scan .
+
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "three-tier-frontend:scan"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"

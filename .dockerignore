@@ -1,0 +1,17 @@
+.git
+.github
+.gitignore
+.env
+.env.*
+terraform
+kubernetes
+helm
+docs
+scripts
+tests
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/*.md
+*.tfstate*

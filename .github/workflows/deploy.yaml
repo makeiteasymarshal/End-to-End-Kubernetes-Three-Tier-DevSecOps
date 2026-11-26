@@ -1,0 +1,83 @@
+name: CD - Build, Scan, Push to ECR & Deploy to EKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target deployment environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: three-tier-devsecops-dev-eks
+  ECR_BACKEND_REPO: three-tier-devsecops-dev-backend
+  ECR_FRONTEND_REPO: three-tier-devsecops-dev-frontend
+
+jobs:
+  build-and-deploy:
+    name: Build, Scan, Push & Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Tag Images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f docker/backend.Dockerfile -t $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG .
+          docker build -f docker/frontend.Dockerfile -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG .
+
+      - name: Scan Images with Trivy before ECR Push
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPO }}:${{ github.sha }}"
+          severity: "CRITICAL"
+          exit-code: "1"
+
+      - name: Push Images to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+
+      - name: Update kubeconfig for Amazon EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy with Helm
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          helm upgrade --install three-tier-app ./helm/three-tier-app \
+            --namespace three-tier-app \
+            --create-namespace \
+            --set backend.image.repository=$ECR_REGISTRY/$ECR_BACKEND_REPO \
+            --set backend.image.tag=$IMAGE_TAG \
+            --set frontend.image.repository=$ECR_REGISTRY/$ECR_FRONTEND_REPO \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --wait --timeout 5m

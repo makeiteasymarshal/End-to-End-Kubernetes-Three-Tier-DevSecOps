@@ -1,0 +1,12 @@
+# Example Remote State Backend (S3 + DynamoDB Locking)
+# Copy to backend.tf and replace placeholder bucket/table names before running terraform init.
+
+terraform {
+  backend "s3" {
+    bucket         = "REPLACE_WITH_YOUR_TFSTATE_BUCKET"
+    key            = "three-tier-devsecops/dev/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "REPLACE_WITH_YOUR_TFLOCK_TABLE"
+    encrypt        = true
+  }
+}

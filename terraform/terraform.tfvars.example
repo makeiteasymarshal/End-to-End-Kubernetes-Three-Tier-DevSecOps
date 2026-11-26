@@ -1,0 +1,15 @@
+aws_region              = "us-east-1"
+project_name            = "three-tier-devsecops"
+environment             = "dev"
+vpc_cidr                = "10.0.0.0/16"
+availability_zones      = ["us-east-1a", "us-east-1b"]
+eks_cluster_version     = "1.31"
+eks_node_instance_types = ["t3.medium"]
+eks_desired_size        = 2
+eks_min_size            = 1
+eks_max_size            = 3
+db_instance_class       = "db.t3.micro"
+db_name                 = "threetierdb"
+db_username             = "appadmin"
+github_repository       = "makeiteasymarshal/End-to-End-Kubernetes-Three-Tier-DevSecOps-Project"
+enable_nat_gateway      = true

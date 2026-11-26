@@ -1,0 +1,79 @@
+name: CI - Validate & Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  backend-ci:
+    name: Backend Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install backend dependencies
+        run: pip install -r application/backend/requirements.txt
+
+      - name: Run Python unit & integration tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+  frontend-ci:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: application/frontend/package-lock.json
+
+      - name: Install dependencies & build
+        working-directory: application/frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm run lint
+          npm run build
+
+  iac-ci:
+    name: Terraform Format & Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Terraform fmt check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init & validate (no backend)
+        working-directory: terraform
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm lint
+        run: helm lint helm/three-tier-app

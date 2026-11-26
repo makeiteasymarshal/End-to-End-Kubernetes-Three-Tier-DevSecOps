@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: three-tier-grafana-dashboard
+  namespace: three-tier-app
+  labels:
+    grafana_dashboard: "1"
+data:
+  three-tier-overview.json: |
+    {
+      "title": "Three-Tier DevSecOps API Overview",
+      "uid": "three-tier-api-overview",
+      "schemaVersion": 39,
+      "version": 1,
+      "panels": [
+        {
+          "id": 1,
+          "title": "Total HTTP Requests",
+          "type": "stat",
+          "targets": [{ "expr": "http_requests_total" }]
+        },
+        {
+          "id": 2,
+          "title": "Database Connection Status",
+          "type": "stat",
+          "targets": [{ "expr": "db_connection_status" }]
+        },
+        {
+          "id": 3,
+          "title": "HTTP 5xx Errors",
+          "type": "timeseries",
+          "targets": [{ "expr": "rate(http_errors_total[5m])" }]
+        }
+      ]
+    }

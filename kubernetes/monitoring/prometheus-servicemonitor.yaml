@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend-servicemonitor
+  namespace: three-tier-app
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  namespaceSelector:
+    matchNames:
+      - three-tier-app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: three-tier-alerts
+  namespace: three-tier-app
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: three-tier-api.rules
+      rules:
+        - alert: BackendDatabaseDisconnected
+          expr: db_connection_status == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend cannot reach PostgreSQL/RDS"
+            description: "db_connection_status has been 0 for more than 1 minute."
+        - alert: BackendHighErrorRate
+          expr: rate(http_errors_total[5m]) > 0.1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Elevated HTTP 5xx error rate on backend API"
