@@ -11,5 +11,5 @@ eks_max_size            = 3
 db_instance_class       = "db.t3.micro"
 db_name                 = "threetierdb"
 db_username             = "appadmin"
-github_repository       = "makeiteasymarshal/End-to-End-Kubernetes-Three-Tier-DevSecOps-Project"
+github_repository       = "makeiteasymarshal/End-to-End-Kubernetes-Three-Tier-DevSecOps"
 enable_nat_gateway      = true

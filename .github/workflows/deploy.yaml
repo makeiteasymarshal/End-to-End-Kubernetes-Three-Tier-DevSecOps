@@ -19,9 +19,9 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER_NAME: three-tier-devsecops-dev-eks
-  ECR_BACKEND_REPO: three-tier-devsecops-dev-backend
-  ECR_FRONTEND_REPO: three-tier-devsecops-dev-frontend
+  EKS_CLUSTER_NAME: three-tier-devsecops-${{ inputs.environment }}-eks
+  ECR_BACKEND_REPO: three-tier-devsecops-${{ inputs.environment }}-backend
+  ECR_FRONTEND_REPO: three-tier-devsecops-${{ inputs.environment }}-frontend
 
 jobs:
   build-and-deploy:

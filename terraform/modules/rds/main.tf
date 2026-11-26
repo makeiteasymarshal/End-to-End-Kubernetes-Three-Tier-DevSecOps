@@ -1,7 +1,7 @@
 resource "random_password" "db_master" {
   length           = 24
   special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  override_special = "!*-_=+"
 }
 
 resource "aws_secretsmanager_secret" "rds_credentials" {
@@ -12,12 +12,13 @@ resource "aws_secretsmanager_secret" "rds_credentials" {
 resource "aws_secretsmanager_secret_version" "rds_credentials" {
   secret_id = aws_secretsmanager_secret.rds_credentials.id
   secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.db_master.result
-    dbname   = var.db_name
-    engine   = "postgresql"
-    port     = 5432
-    host     = aws_db_instance.this.address
+    username     = var.db_username
+    password     = random_password.db_master.result
+    dbname       = var.db_name
+    engine       = "postgresql"
+    port         = 5432
+    host         = aws_db_instance.this.address
+    database_url = "postgresql://${var.db_username}:${urlencode(random_password.db_master.result)}@${aws_db_instance.this.address}:5432/${var.db_name}?sslmode=require"
   })
 }
 

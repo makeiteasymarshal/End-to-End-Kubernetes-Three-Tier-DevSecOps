@@ -79,7 +79,7 @@ variable "db_username" {
 variable "github_repository" {
   description = "GitHub repository in owner/repo format for OIDC trust policy"
   type        = string
-  default     = "makeiteasymarshal/End-to-End-Kubernetes-Three-Tier-DevSecOps-Project"
+  default     = "makeiteasymarshal/End-to-End-Kubernetes-Three-Tier-DevSecOps"
 }
 
 variable "enable_nat_gateway" {

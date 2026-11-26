@@ -22,10 +22,16 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.port }}

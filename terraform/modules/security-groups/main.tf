@@ -45,6 +45,14 @@ resource "aws_security_group" "eks_nodes" {
   }
 
   ingress {
+    description     = "Allow backend API from ALB"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
     description = "Allow intra-VPC node communication"
     from_port   = 0
     to_port     = 0
