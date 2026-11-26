@@ -44,7 +44,7 @@ jobs:
       - name: Build & Tag Images
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}
+          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}-${{ github.run_number }}
         run: |
           docker build -f docker/backend.Dockerfile -t $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG .
           docker build -f docker/frontend.Dockerfile -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG .
@@ -52,14 +52,14 @@ jobs:
       - name: Scan Images with Trivy before ECR Push
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPO }}:${{ github.sha }}-${{ github.run_number }}"
+          image-ref: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPO }}:${{ github.sha }}-${{ github.run_number }}-${{ github.run_number }}"
           severity: "CRITICAL"
           exit-code: "1"
 
       - name: Push Images to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}
+          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}-${{ github.run_number }}
         run: |
           docker push $ECR_REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
@@ -71,7 +71,7 @@ jobs:
       - name: Deploy with Helm
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}
+          IMAGE_TAG: ${{ github.sha }}-${{ github.run_number }}-${{ github.run_number }}
         run: |
           helm upgrade --install three-tier-app ./helm/three-tier-app \
             --namespace three-tier-app \
