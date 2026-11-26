@@ -32,7 +32,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && useradd --uid 10001 --gid appgroup --shell /sbin/nologin --create-home appuser
 
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir /wheels/* && pip uninstall -y setuptools wheel && rm -rf /wheels
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir /wheels/* && pip uninstall -y setuptools wheel && rm -rf /wheels /usr/local/lib/python3.11/site-packages/setuptools* /usr/local/lib/python3.11/site-packages/wheel*
 
 COPY application/backend/app ./app
 
