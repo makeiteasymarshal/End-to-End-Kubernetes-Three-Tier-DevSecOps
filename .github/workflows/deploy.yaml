@@ -50,7 +50,7 @@ jobs:
           docker build -f docker/frontend.Dockerfile -t $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG .
 
       - name: Scan Images with Trivy before ECR Push
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BACKEND_REPO }}:${{ github.sha }}"
           severity: "CRITICAL"
