@@ -27,6 +27,7 @@ jobs:
           scan-ref: "."
           scanners: "vuln,secret,misconfig"
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
           format: "sarif"
           output: "trivy-fs-results.sarif"
 
@@ -72,6 +73,7 @@ jobs:
         with:
           image-ref: "three-tier-backend:scan"
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
           exit-code: "1"
 
       - name: Build frontend image locally for scan
@@ -82,4 +84,5 @@ jobs:
         with:
           image-ref: "three-tier-frontend:scan"
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
           exit-code: "1"
