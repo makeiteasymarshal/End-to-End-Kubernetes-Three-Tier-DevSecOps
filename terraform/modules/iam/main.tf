@@ -74,7 +74,7 @@ resource "aws_iam_role" "github_actions" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:*"
+          "token.actions.githubusercontent.com:sub" = "repo:makeiteasymarshal@157603702/End-to-End-Kubernetes-Three-Tier-DevSecOps@1472727692:*"
         }
       }
     }]
